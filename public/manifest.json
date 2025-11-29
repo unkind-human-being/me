@@ -1,0 +1,26 @@
+{
+  "name": "Abdul Nasirin | Developer Portfolio",
+  "short_name": "AbdulDev",
+  "description": "Personal portfolio of Abdul Nasirin – Web & App Developer showcasing projects, skills, and services.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone"],
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icons/icon/192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon/512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
