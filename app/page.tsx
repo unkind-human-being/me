@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import ParallaxLutsBackground from "@/components/ParallaxLutsBackground";
@@ -11,6 +11,12 @@ type Project = {
   tags: string[];
   link?: string;
   imageSrc?: string;
+};
+
+type ChatMessage = {
+  id: number;
+  from: "user" | "bot";
+  text: string;
 };
 
 const projects: Project[] = [
@@ -26,7 +32,7 @@ const projects: Project[] = [
       "A social platform for the IICT department where users can post updates, share projects, and chat with others in the community.",
     tags: ["Social Media", "Chat", "Community"],
   },
-    {
+  {
     title: "Enrollment System Template",
     description:
       "A clean and reusable enrollment system template, designed as a base for schools and institutions to manage student registration.",
@@ -97,6 +103,47 @@ export default function HomePage() {
   const [typedName, setTypedName] = useState("");
   const [visibleSections, setVisibleSections] = useState<string[]>([]);
 
+  // AI Lhuts chat state
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: 1,
+      from: "bot",
+      text: "Hey, I’m AI Lhuts 🤖 Ask me anything about Abdul’s projects, services, or how we can work together.",
+    },
+  ]);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll chat to bottom when messages change
+  useEffect(() => {
+    if (!isChatOpen) return;
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, isChatOpen]);
+
+  const handleSendChat = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = chatInput.trim();
+    if (!trimmed) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now(),
+      from: "user",
+      text: trimmed,
+    };
+
+    // Basic fake AI reply (you can later replace with real API call)
+    const botMessage: ChatMessage = {
+      id: Date.now() + 1,
+      from: "bot",
+      text:
+        "Nice question! I’m a demo version of AI Lhuts. In the real version, I’ll answer based on Abdul’s projects, pricing, and services. 👨‍💻",
+    };
+
+    setChatMessages((prev) => [...prev, userMessage, botMessage]);
+    setChatInput("");
+  };
+
   // Typing animation for "Abdul M. Nasirin"
   useEffect(() => {
     const fullName = "Abdul M. Nasirin";
@@ -157,7 +204,9 @@ export default function HomePage() {
     const register = () => {
       navigator.serviceWorker
         .register("/service-worker.js")
-        .catch((err) => console.error("Service worker registration failed", err));
+        .catch((err) =>
+          console.error("Service worker registration failed", err)
+        );
     };
 
     if (document.readyState === "complete") {
@@ -616,6 +665,62 @@ export default function HomePage() {
         </section>
       </main>
 
+      {/* FLOATING AI Lhuts CHAT */}
+      {!isChatOpen && (
+        <button
+          type="button"
+          className="chat-launcher"
+          onClick={() => setIsChatOpen(true)}
+        >
+          🤖 Chat with AI Lhuts
+        </button>
+      )}
+
+      {isChatOpen && (
+        <div className="chat-widget">
+          <div className="chat-header">
+            <div>
+              <p className="chat-title">AI Lhuts</p>
+              <p className="chat-subtitle">Portfolio Assistant</p>
+            </div>
+            <button
+              type="button"
+              className="chat-close"
+              onClick={() => setIsChatOpen(false)}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="chat-body">
+            {chatMessages.map((m) => (
+              <div
+                key={m.id}
+                className={`chat-message ${
+                  m.from === "user" ? "chat-message-user" : "chat-message-bot"
+                }`}
+              >
+                {m.text}
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+
+          <form className="chat-input-row" onSubmit={handleSendChat}>
+            <input
+              type="text"
+              className="chat-input"
+              placeholder="Ask about projects, pricing, or services…"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+            />
+            <button type="submit" className="chat-send">
+              ↗
+            </button>
+          </form>
+        </div>
+      )}
+
       <style jsx>{`
         :global(html) {
           scroll-behavior: smooth;
@@ -829,13 +934,11 @@ export default function HomePage() {
             rgba(15, 23, 42, 0.9)
           );
           border: 1px solid rgba(55, 65, 81, 0.9);
-          /* 🔥 Smooth hover animation */
           transform-origin: center;
           transition: transform 0.25s ease, box-shadow 0.25s ease,
             border-color 0.25s ease;
         }
 
-        /* 🔥 Zoom effect for profile snapshot on hover (desktop only feel) */
         .hero-card:hover .hero-card-inner {
           transform: translateY(-4px) scale(1.03);
           border-color: rgba(236, 72, 153, 0.95);
@@ -985,13 +1088,11 @@ export default function HomePage() {
             rgba(15, 23, 42, 0.98),
             rgba(15, 23, 42, 0.9)
           );
-          /* 🔥 Smooth hover animation */
           transform-origin: center;
           transition: transform 0.22s ease, box-shadow 0.22s ease,
             border-color 0.22s ease;
         }
 
-        /* 🔥 Zoom effect for each project card */
         .project-card:hover {
           transform: translateY(-4px) scale(1.02);
           border-color: rgba(148, 163, 184, 0.95);
@@ -1242,6 +1343,157 @@ export default function HomePage() {
           border: 0;
         }
 
+        /* AI Lhuts Floating Chat */
+        .chat-launcher {
+          position: fixed;
+          right: 18px;
+          bottom: 18px;
+          z-index: 40;
+          border-radius: 999px;
+          padding: 10px 18px;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          border: 1px solid rgba(236, 72, 153, 0.9);
+          background: radial-gradient(
+            circle at top,
+            #ec4899 0%,
+            #db2777 45%,
+            #4c0519 100%
+          );
+          color: #f9fafb;
+          box-shadow: 0 0 18px rgba(236, 72, 153, 0.9),
+            0 0 6px rgba(219, 39, 119, 0.7);
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .chat-widget {
+          position: fixed;
+          right: 18px;
+          bottom: 18px;
+          width: 320px;
+          max-height: 420px;
+          z-index: 50;
+          border-radius: 22px;
+          overflow: hidden;
+          background: linear-gradient(
+            to bottom right,
+            rgba(15, 23, 42, 0.98),
+            rgba(15, 23, 42, 0.95)
+          );
+          border: 1px solid rgba(55, 65, 81, 0.9);
+          box-shadow: 0 0 28px rgba(15, 23, 42, 1);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .chat-header {
+          padding: 10px 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: radial-gradient(
+            circle at top left,
+            rgba(236, 72, 153, 0.3),
+            rgba(15, 23, 42, 0.95)
+          );
+          border-bottom: 1px solid rgba(55, 65, 81, 0.9);
+        }
+
+        .chat-title {
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        .chat-subtitle {
+          font-size: 11px;
+          color: #9ca3af;
+        }
+
+        .chat-close {
+          border: none;
+          background: transparent;
+          color: #e5e7eb;
+          cursor: pointer;
+          font-size: 16px;
+          line-height: 1;
+        }
+
+        .chat-body {
+          padding: 10px;
+          flex: 1;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .chat-message {
+          max-width: 85%;
+          padding: 7px 10px;
+          border-radius: 10px;
+          font-size: 12px;
+          line-height: 1.4;
+        }
+
+        .chat-message-bot {
+          align-self: flex-start;
+          background: rgba(31, 41, 55, 0.95);
+          border: 1px solid rgba(55, 65, 81, 0.9);
+        }
+
+        .chat-message-user {
+          align-self: flex-end;
+          background: rgba(34, 197, 94, 0.15);
+          border: 1px solid rgba(34, 197, 94, 0.8);
+        }
+
+        .chat-input-row {
+          display: flex;
+          padding: 8px;
+          gap: 6px;
+          border-top: 1px solid rgba(31, 41, 55, 0.9);
+          background: rgba(15, 23, 42, 0.98);
+        }
+
+        .chat-input {
+          flex: 1;
+          border-radius: 999px;
+          border: 1px solid rgba(55, 65, 81, 0.9);
+          background: rgba(15, 23, 42, 0.95);
+          padding: 6px 10px;
+          font-size: 12px;
+          color: #e5e7eb;
+          outline: none;
+        }
+
+        .chat-input::placeholder {
+          color: #6b7280;
+        }
+
+        .chat-send {
+          border-radius: 999px;
+          width: 32px;
+          height: 32px;
+          border: 1px solid rgba(236, 72, 153, 0.9);
+          background: radial-gradient(
+            circle at top,
+            #ec4899 0%,
+            #db2777 45%,
+            #4c0519 100%
+          );
+          color: #f9fafb;
+          font-size: 14px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
         /* Responsive */
         @media (min-width: 768px) {
           .main {
@@ -1313,6 +1565,17 @@ export default function HomePage() {
 
           .footer-map iframe {
             height: 220px;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .chat-widget {
+            width: calc(100% - 24px);
+            right: 12px;
+          }
+
+          .chat-launcher {
+            right: 12px;
           }
         }
       `}</style>
